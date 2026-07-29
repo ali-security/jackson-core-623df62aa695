@@ -111,4 +111,22 @@ public class StreamReadConstraints {
         }
     }
 
+    public void validateIntegerLength(int length) throws StreamConstraintsException
+    {
+        if (length > _maxNumLen) {
+            throw new StreamConstraintsException(
+                String.format("Number value length (%d) exceeds the maximum allowed (%d)",
+                    length, _maxNumLen));
+        }
+    }
+
+    public void validateFPLength(int length) throws StreamConstraintsException
+    {
+        if (length > _maxNumLen) {
+            throw new StreamConstraintsException(
+                String.format("Number value length (%d) exceeds the maximum allowed (%d)",
+                    length, _maxNumLen));
+        }
+    }
+
 }

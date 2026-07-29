@@ -14,6 +14,12 @@ JSON library.
 === Releases ===
 ------------------------------------------------------------------------
 
+2.13.0 (not yet released)
+
+#652: Misleading exception for input source when processing byte buffer
+  with start offset
+ (reported by Greg W)
+
 2.12.7 (26-May-2022)
 
 No changes since 2.12.6

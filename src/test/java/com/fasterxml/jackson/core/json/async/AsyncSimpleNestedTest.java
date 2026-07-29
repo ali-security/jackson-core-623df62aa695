@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.async.AsyncTestBase;
+import com.fasterxml.jackson.core.exc.StreamConstraintsException;
 import com.fasterxml.jackson.core.testsupport.AsyncReaderWrapper;
 
 public class AsyncSimpleNestedTest extends AsyncTestBase
@@ -175,6 +176,85 @@ public class AsyncSimpleNestedTest extends AsyncTestBase
         assertToken(JsonToken.END_ARRAY, r.nextToken());
     }
     
+    /*
+    /**********************************************************************
+    /* Test methods, nesting depth limits
+    /**********************************************************************
+     */
+
+    // Verify that the maximum nesting depth is enforced by the non-blocking
+    // parser as well (that is, by `_startArrayScope()` / `_startObjectScope()`).
+    public void testDeepNesting() throws Exception
+    {
+        byte[] data = _jsonDoc(createDeepNestedDoc(1050));
+        _testDeepNesting(JSON_F, data, 0, 100, 1001, 1000);
+        _testDeepNesting(JSON_F, data, 1, 7, 1001, 1000);
+    }
+
+    public void testDeepNestingCustomLimit() throws Exception
+    {
+        JsonFactory f = JsonFactory.builder()
+                .streamReadConstraints(StreamReadConstraints.builder().maxNestingDepth(10).build())
+                .build();
+        byte[] data = _jsonDoc(createDeepNestedDoc(10));
+        _testDeepNesting(f, data, 0, 100, 11, 10);
+        _testDeepNesting(f, data, 0, 1, 11, 10);
+        _testDeepNesting(f, data, 3, 3, 11, 10);
+    }
+
+    private void _testDeepNesting(JsonFactory f, byte[] data, int offset, int readSize,
+            int expDepth, int expMaxDepth) throws IOException
+    {
+        AsyncReaderWrapper r = asyncForBytes(f, readSize, data, offset);
+        try {
+            while (r.nextToken() != null) { }
+            fail("expected StreamConstraintsException");
+        } catch (StreamConstraintsException e) {
+            assertEquals(String.format("Depth (%d) exceeds the maximum allowed nesting depth (%d)",
+                    expDepth, expMaxDepth), e.getMessage());
+        }
+        r.close();
+    }
+
+    // No false positives: a document whose maximum nesting depth is 999 (just below
+    // the default maximum of 1000) must be parsed fine. NOTE: `createDeepNestedDoc(d)`
+    // reaches depth `1 + 2*d`, hence `d == 499`.
+    public void testDeepNestingBelowLimit() throws Exception
+    {
+        byte[] data = _jsonDoc(createDeepNestedDoc(499));
+        _testDeepNestingBelowLimit(JSON_F, data, 0, 100, 999);
+        _testDeepNestingBelowLimit(JSON_F, data, 2, 7, 999);
+    }
+
+    private void _testDeepNestingBelowLimit(JsonFactory f, byte[] data, int offset,
+            int readSize, int expMaxDepth) throws IOException
+    {
+        AsyncReaderWrapper r = asyncForBytes(f, readSize, data, offset);
+        int maxDepth = 0;
+        while (r.nextToken() != null) {
+            int depth = r.getParsingContext().getNestingDepth();
+            if (depth > maxDepth) {
+                maxDepth = depth;
+            }
+        }
+        assertEquals(expMaxDepth, maxDepth);
+        r.close();
+    }
+
+    private String createDeepNestedDoc(final int depth) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        for (int i = 0; i < depth; i++) {
+            sb.append("{ \"a\": [");
+        }
+        sb.append(" \"val\" ");
+        for (int i = 0; i < depth; i++) {
+            sb.append("]}");
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
     /*
     /**********************************************************************
     /* Test methods, fail checking

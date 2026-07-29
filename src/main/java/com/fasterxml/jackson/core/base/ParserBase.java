@@ -40,6 +40,11 @@ public abstract class ParserBase extends ParserMinimalBase
     final protected IOContext _ioContext;
 
     /**
+     * @since 2.15
+     */
+    protected final StreamReadConstraints _streamReadConstraints;
+
+    /**
      * Flag that indicates whether parser is closed or not. Gets
      * set when parser is either closed by explicit call
      * ({@link #close}) or when end-of-input is reached.
@@ -237,6 +242,7 @@ public abstract class ParserBase extends ParserMinimalBase
     protected ParserBase(IOContext ctxt, int features) {
         super(features);
         _ioContext = ctxt;
+        _streamReadConstraints = ctxt.streamReadConstraints();
         _textBuffer = ctxt.constructTextBuffer();
         DupDetector dups = Feature.STRICT_DUPLICATE_DETECTION.enabledIn(features)
                 ? DupDetector.rootDetector(this) : null;
@@ -1273,4 +1279,13 @@ public abstract class ParserBase extends ParserMinimalBase
         return _ioContext.streamReadConstraints().getMaxNumberLength();
     }
 
+    protected final void createChildArrayContext(final int lineNr, final int colNr) throws IOException {
+        _parsingContext = _parsingContext.createChildArrayContext(lineNr, colNr);
+        _streamReadConstraints.validateNestingDepth(_parsingContext.getNestingDepth());
+    }
+
+    protected final void createChildObjectContext(final int lineNr, final int colNr) throws IOException {
+        _parsingContext = _parsingContext.createChildObjectContext(lineNr, colNr);
+        _streamReadConstraints.validateNestingDepth(_parsingContext.getNestingDepth());
+    }
 }

@@ -834,10 +834,10 @@ public class UTF8StreamJsonParser
         }
         switch (i) {
         case '[':
-            _parsingContext = _parsingContext.createChildArrayContext(_tokenInputRow, _tokenInputCol);
+            createChildArrayContext(_tokenInputRow, _tokenInputCol);
             return (_currToken = JsonToken.START_ARRAY);
         case '{':
-            _parsingContext = _parsingContext.createChildObjectContext(_tokenInputRow, _tokenInputCol);
+            createChildObjectContext(_tokenInputRow, _tokenInputCol);
             return (_currToken = JsonToken.START_OBJECT);
         case 't':
             _matchTrue();
@@ -870,7 +870,7 @@ public class UTF8StreamJsonParser
         return (_currToken = _handleUnexpectedValue(i));
     }
     
-    private final JsonToken _nextAfterName()
+    private final JsonToken _nextAfterName() throws IOException
     {
         _nameCopied = false; // need to invalidate if it was copied
         JsonToken t = _nextToken;
@@ -880,9 +880,9 @@ public class UTF8StreamJsonParser
         
         // Also: may need to start new context?
         if (t == JsonToken.START_ARRAY) {
-            _parsingContext = _parsingContext.createChildArrayContext(_tokenInputRow, _tokenInputCol);
+            createChildArrayContext(_tokenInputRow, _tokenInputCol);
         } else if (t == JsonToken.START_OBJECT) {
-            _parsingContext = _parsingContext.createChildObjectContext(_tokenInputRow, _tokenInputCol);
+            createChildObjectContext(_tokenInputRow, _tokenInputCol);
         }
         return (_currToken = t);
     }
@@ -1276,9 +1276,9 @@ public class UTF8StreamJsonParser
                 return _textBuffer.contentsAsString();
             }
             if (t == JsonToken.START_ARRAY) {
-                _parsingContext = _parsingContext.createChildArrayContext(_tokenInputRow, _tokenInputCol);
+                createChildArrayContext(_tokenInputRow, _tokenInputCol);
             } else if (t == JsonToken.START_OBJECT) {
-                _parsingContext = _parsingContext.createChildObjectContext(_tokenInputRow, _tokenInputCol);
+                createChildObjectContext(_tokenInputRow, _tokenInputCol);
             }
             return null;
         }
@@ -1299,9 +1299,9 @@ public class UTF8StreamJsonParser
                 return getIntValue();
             }
             if (t == JsonToken.START_ARRAY) {
-                _parsingContext = _parsingContext.createChildArrayContext(_tokenInputRow, _tokenInputCol);
+                createChildArrayContext(_tokenInputRow, _tokenInputCol);
             } else if (t == JsonToken.START_OBJECT) {
-                _parsingContext = _parsingContext.createChildObjectContext(_tokenInputRow, _tokenInputCol);
+                createChildObjectContext(_tokenInputRow, _tokenInputCol);
             }
             return defaultValue;
         }
@@ -1322,9 +1322,9 @@ public class UTF8StreamJsonParser
                 return getLongValue();
             }
             if (t == JsonToken.START_ARRAY) {
-                _parsingContext = _parsingContext.createChildArrayContext(_tokenInputRow, _tokenInputCol);
+                createChildArrayContext(_tokenInputRow, _tokenInputCol);
             } else if (t == JsonToken.START_OBJECT) {
-                _parsingContext = _parsingContext.createChildObjectContext(_tokenInputRow, _tokenInputCol);
+                createChildObjectContext(_tokenInputRow, _tokenInputCol);
             }
             return defaultValue;
         }
@@ -1348,9 +1348,9 @@ public class UTF8StreamJsonParser
                 return Boolean.FALSE;
             }
             if (t == JsonToken.START_ARRAY) {
-                _parsingContext = _parsingContext.createChildArrayContext(_tokenInputRow, _tokenInputCol);
+                createChildArrayContext(_tokenInputRow, _tokenInputCol);
             } else if (t == JsonToken.START_OBJECT) {
-                _parsingContext = _parsingContext.createChildObjectContext(_tokenInputRow, _tokenInputCol);
+                createChildObjectContext(_tokenInputRow, _tokenInputCol);
             }
             return null;
         }

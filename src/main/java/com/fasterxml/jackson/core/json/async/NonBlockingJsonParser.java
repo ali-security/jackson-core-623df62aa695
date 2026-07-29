@@ -1348,6 +1348,7 @@ public class NonBlockingJsonParser
             if (++_inputPtr >= _inputEnd) {
                 _minorState = MINOR_NUMBER_INTEGER_DIGITS;
                 _textBuffer.setCurrentLength(outPtr);
+                _setIntLength(outPtr);
                 return (_currToken = JsonToken.NOT_AVAILABLE);
             }
             ch = _inputBuffer[_inputPtr] & 0xFF;
@@ -1414,6 +1415,7 @@ public class NonBlockingJsonParser
             if (++_inputPtr >= _inputEnd) {
                 _minorState = MINOR_NUMBER_INTEGER_DIGITS;
                 _textBuffer.setCurrentLength(outPtr);
+                _setIntLength(outPtr-1);
                 return (_currToken = JsonToken.NOT_AVAILABLE);
             }
             ch = _inputBuffer[_inputPtr] & 0xFF;
@@ -1601,6 +1603,10 @@ public class NonBlockingJsonParser
             if (_inputPtr >= _inputEnd) {
                 _minorState = MINOR_NUMBER_INTEGER_DIGITS;
                 _textBuffer.setCurrentLength(outPtr);
+                // [core#1556]: validate accumulated integer length so far before yielding
+                // NOT_AVAILABLE; otherwise a stream of digit-only chunks can grow the buffer
+                // past `StreamReadConstraints.maxNumberLength` (sibling of #1555).
+                _setIntLength(outPtr + negMod);
                 return (_currToken = JsonToken.NOT_AVAILABLE);
             }
             int ch = _inputBuffer[_inputPtr] & 0xFF;

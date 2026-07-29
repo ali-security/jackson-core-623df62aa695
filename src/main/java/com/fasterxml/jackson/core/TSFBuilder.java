@@ -2,6 +2,7 @@ package com.fasterxml.jackson.core;
 
 import com.fasterxml.jackson.core.io.InputDecorator;
 import com.fasterxml.jackson.core.io.OutputDecorator;
+import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.core.json.JsonWriteFeature;
 
@@ -76,6 +77,8 @@ public abstract class TSFBuilder<F extends JsonFactory,
      * additional processing on output during content generation.
      */
     protected OutputDecorator _outputDecorator;
+
+    protected StreamReadConstraints _streamReadConstraints;
     
     /*
     /**********************************************************************
@@ -95,6 +98,7 @@ public abstract class TSFBuilder<F extends JsonFactory,
     {
         this(base._factoryFeatures,
                 base._parserFeatures, base._generatorFeatures);
+        _streamReadConstraints = base._streamReadConstraints;
     }
 
     protected TSFBuilder(int factoryFeatures,
@@ -259,6 +263,11 @@ public abstract class TSFBuilder<F extends JsonFactory,
 
     public B outputDecorator(OutputDecorator dec) {
         _outputDecorator = dec;
+        return _this();
+    }
+
+    public B streamReadConstraints(StreamReadConstraints streamReadConstraints) {
+        _streamReadConstraints = streamReadConstraints;
         return _this();
     }
 

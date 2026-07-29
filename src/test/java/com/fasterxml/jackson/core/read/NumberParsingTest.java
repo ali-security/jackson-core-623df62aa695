@@ -1,5 +1,11 @@
 package com.fasterxml.jackson.core.read;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.ByteArrayInputStream;
 import java.io.CharArrayReader;
 import java.io.IOException;
@@ -596,16 +602,35 @@ public class NumberParsingTest
             input.append(1);
         }
         final String DOC = input.toString();
-        JsonFactory f = new JsonFactory();
+        JsonFactory f = JsonFactory.builder()
+                .streamReadConstraints(StreamReadConstraints.builder().withMaxNumberLength(10000).build())
+                .build();
         _testIssue160LongNumbers(f, DOC, false);
         _testIssue160LongNumbers(f, DOC, true);
+    }
+
+    public void testLongNumbersFails() throws Exception
+    {
+        StringBuilder input = new StringBuilder();
+        // test this with negative
+        for (int i = 0; i < 2100; i++) {
+            input.append(1);
+        }
+        final String DOC = input.toString();
+        JsonFactory f = JsonFactory.builder().build();
+        try {
+            _testIssue160LongNumbers(f, DOC, false);
+            fail("Expected error trying to parse too long number");
+        } catch (Exception e) {
+            verifyException(e, "Malformed numeric value");
+        }
     }
 
     private void _testIssue160LongNumbers(JsonFactory f, String doc, boolean useStream) throws Exception
     {
         JsonParser p = useStream
-                ? FACTORY.createParser(doc.getBytes("UTF-8"))
-                        : FACTORY.createParser(doc);
+                ? f.createParser(doc.getBytes("UTF-8"))
+                : f.createParser(doc);
         assertToken(JsonToken.VALUE_NUMBER_INT, p.nextToken());
         BigInteger v = p.getBigIntegerValue();
         assertNull(p.nextToken());

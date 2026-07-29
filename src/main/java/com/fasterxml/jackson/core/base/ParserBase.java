@@ -896,10 +896,16 @@ public abstract class ParserBase extends ParserMinimalBase
                     _reportTooLongIntegral(expType, numStr);
                 }
                 if ((expType == NR_DOUBLE) || (expType == NR_FLOAT)) {
+                    if (getMaxNumLen() >= 0 && numStr.length() > getMaxNumLen()) {
+                        throw new NumberFormatException("number length exceeds the max number length of " + getMaxNumLen());
+                    }
                     _numberDouble = NumberInput.parseDouble(numStr);
                     _numTypesValid = NR_DOUBLE;
                 } else {
                     // nope, need the heavy guns... (rare case)
+                    if (getMaxNumLen() >= 0 && numStr.length() > getMaxNumLen()) {
+                        throw new NumberFormatException("number length exceeds the max number length of " + getMaxNumLen());
+                    }
                     _numberBigInt = new BigInteger(numStr);
                     _numTypesValid = NR_BIGINT;
                 }
@@ -930,7 +936,7 @@ public abstract class ParserBase extends ParserMinimalBase
     {
         // First, converting from long ought to be easy
         if ((_numTypesValid & NR_LONG) != 0) {
-            // Let's verify it's lossless conversion by simple roundtrip
+            // Let's verify its lossless conversion by simple roundtrip
             int result = (int) _numberLong;
             if (((long) result) != _numberLong) {
                 reportOverflowInt(getText(), currentToken());
@@ -1039,7 +1045,11 @@ public abstract class ParserBase extends ParserMinimalBase
             /* Let's actually parse from String representation, to avoid
              * rounding errors that non-decimal floating operations could incur
              */
-            _numberBigDecimal = NumberInput.parseBigDecimal(getText());
+            final String numStr = getText();
+            if (getMaxNumLen() >= 0 && numStr.length() > getMaxNumLen()) {
+                throw new NumberFormatException("number length exceeds the max number length of " + getMaxNumLen());
+            }
+            _numberBigDecimal = NumberInput.parseBigDecimal(numStr);
         } else if ((_numTypesValid & NR_BIGINT) != 0) {
             _numberBigDecimal = new BigDecimal(_numberBigInt);
         } else if ((_numTypesValid & NR_LONG) != 0) {
@@ -1259,4 +1269,8 @@ public abstract class ParserBase extends ParserMinimalBase
 
     // Can't declare as deprecated, for now, but shouldn't be needed
     protected void _finishString() throws IOException { }
+    protected int getMaxNumLen() {
+        return _ioContext.streamReadConstraints().getMaxNumberLength();
+    }
+
 }
